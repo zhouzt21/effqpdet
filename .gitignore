@@ -1,0 +1,53 @@
+.idea/
+.vscode/
+
+# CMake/Build
+build/
+cmake-*/
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts/
+CTestTestfile.cmake
+cmake_install.cmake
+Makefile
+*.dir/
+*.ninja
+*.ninja_deps
+*.ninja_log
+
+# Compiled artifacts
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.pdb
+*.ilk
+
+# Logs & temp
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Generated outputs / data
+results/
+results_1/
+yaml/
+data/
+video/
+build/detections.csv
+tb_log.tfevents*
+
+# Third-party build outputs
+Google_tests/lib/
+yaml-cpp_lib/lib/
+
+# OS files
+.DS_Store
+Thumbs.db
