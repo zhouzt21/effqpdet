@@ -54,7 +54,7 @@ and controls window size, burst-detection thresholds, and whether results are vi
 
 ## 配置清单（需要自行修改的路径/参数）
 
-### 1) 构建依赖路径（CMake）
+### 1） 构建依赖路径（CMake）
 
 Windows 下这些路径是硬编码的，必须按你的安装位置修改：
 
@@ -74,7 +74,7 @@ Linux 下默认使用系统路径（如 `/usr/include/hdf5/serial`、`/usr/inclu
 
 > 提示：若你使用 HDF5 的 CMake 配置包，可以在配置时显式传入 `-DHDF5_DIR=<hdf5-config.cmake 所在目录>` 来避免找错版本。
 
-### 2) 运行配置（YAML）
+### 2） 运行配置（YAML）
 
 必须修改为你本机可用的路径：
 
@@ -90,20 +90,28 @@ Linux 下默认使用系统路径（如 `/usr/include/hdf5/serial`、`/usr/inclu
 
 确保输出目录已存在（如 `results/`），否则运行时写文件会失败。
 
-### 3) 数据集路径
+### 3） 数据集路径
 
 示例配置中假定数据集位于本机磁盘路径，需替换为你的实际下载位置。数据集下载地址见上文 Dataset。
 
-### 4) 容器构建脚本（可选）
+### 4） 容器构建脚本（可选）
 
 如果使用 [compile_build.sh](compile_build.sh)，需要修改以下路径：
 
 - `--bind /mnt/data/vrg/spetlrad/data:/mnt/data/vrg/spetlrad/data`
 - 容器镜像：`/mnt/data/vrg/spetlrad/data/singularity/ptbd_pop.sif`
 
-### 5) 清理旧缓存
+### 5） 清理旧缓存
 
 在不同系统/路径间切换构建时，需要删除 `build/` 或至少移除 `build/CMakeCache.txt` 和 `build/CMakeFiles/`，避免缓存里的旧路径导致配置失败。
+
+### 6）zzt workpc 运行命令示例
+
+```bash
+cmake --build "E:/VScode_data/project/Anti-uav/effqpdet/build" --config Release
+
+"E:/VScode_data/project/Anti-uav/effqpdet/build/Release/qpdet.exe" "E:/VScode_data/project/Anti-uav/effqpdet/config_demo_output_1545_800m.yaml"
+```
 
 ## Dataset
 
