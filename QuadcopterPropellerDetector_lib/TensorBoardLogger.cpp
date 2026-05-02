@@ -5,6 +5,7 @@
 #include <google/protobuf/text_format.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <ctime>
 #include <fstream>

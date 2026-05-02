@@ -51,11 +51,18 @@ Detector::Detector(TensorBoardLogger& logger, Config& config) :
         (*m_global_stats)[p].resize(K - k_min + 1);
     }
 
+#if defined(ENABLE_HDF5)
     if (config.is_analysis) {
         initializeAnalysis();
     }
+#else
+    if (config.is_analysis || config.is_runtime_analysis) {
+        std::cerr << "HDF5 is disabled at build time; analysis output will be skipped." << std::endl;
+    }
+#endif
 }
 
+#if defined(ENABLE_HDF5)
 template <typename T>
 void write_attribute_to_h5(H5::Group& h5_group, const int x, const int y,
     std::string attribute_name, T attribute_value,
@@ -149,6 +156,7 @@ void Detector::initializeAnalysis()
 
     writeConfigToH5(h5_file, config);
 }
+#endif
 
 
 void Detector::addCallback(
@@ -199,6 +207,7 @@ void Detector::addEvents(std::shared_ptr<Metavision::EventCD[]>&& arr, size_t ar
                 updateGlobalStats((*m_global_stats)[p][k - k_min], ev->x, ev->y);
             }
 
+#if defined(ENABLE_HDF5)
             if (config.is_analysis)
             {
                 if (isPropellerPresent((*m_stats)[0][k - k_min][n][m], t)
@@ -219,6 +228,7 @@ void Detector::addEvents(std::shared_ptr<Metavision::EventCD[]>&& arr, size_t ar
                     burst_distances_us->clear();
                 }
             }
+#endif
             if (config.is_analysis || config.is_runtime_analysis) {
                 if (first_ts_us < 0)
                 {
@@ -309,6 +319,7 @@ void Detector::stop() {
     callbacks_cv.notify_all();
     callback_thread.join();
 
+#if defined(ENABLE_HDF5)
     if (config.is_analysis)
     {
         h5_file.createAttribute("first_ts_us", H5::PredType::NATIVE_LLONG, H5::DataSpace()).write(H5::PredType::NATIVE_LLONG, &first_ts_us);
@@ -349,6 +360,7 @@ void Detector::stop() {
             }
         }
     }
+#endif
 }
 
 void Detector::addEventsAsync(const Metavision::EventCD *begin, const Metavision::EventCD *end) {
@@ -374,6 +386,11 @@ void Detector::join() {
 
 void Detector::storeRunTime(int_least64_t start_time, int_least64_t end_time)
 {
+#if !defined(ENABLE_HDF5)
+    (void)start_time;
+    (void)end_time;
+    return;
+#else
     int_least64_t runtime_us = (end_time - start_time) / 1000;
 
     // if h5_file is not open, open
@@ -462,6 +479,7 @@ void Detector::storeRunTime(int_least64_t start_time, int_least64_t end_time)
         dataset.write(&runtime_us, H5::PredType::NATIVE_ULLONG, memspace, extendedSpace);
     }
 
+#endif
 }
 
 void Detector::updateBlockStats(BlockStats &stats, double timestamp) {

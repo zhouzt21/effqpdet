@@ -1,0 +1,49 @@
+mode: 'visual' # 'textual' or 'visual'
+is_analysis: false
+is_runtime_analysis: false
+is_quiet: true
+
+recording_filepath: E:/data/metavision/different_distance_251212/output_1545_800m.raw
+analysis_filepath: ""
+save_bbox: output/demo/output_1545_800m.csv
+tensorboard_log_file: output/demo/tfevents
+
+simulate_real_time: true
+
+height: 720
+width: 1280
+
+start_us: 0
+end_us: 0
+
+acc: 400
+fps: 250
+
+temporal_stride: 1
+
+# 2^k is the block size
+k_min: 4
+k_max: 4
+
+alpha_of_burst_std: 0.9
+alpha_interarrival_time: 0.0001
+alpha_interarrival_time_window_size: 5000
+min_interarrival_time: 0.5
+max_rate: 720.0
+T_min: 10
+
+min_E_x_of_std: 3300
+max_E_x_of_std: 33000
+
+# Standard-deviation thresholds
+max_burst_std_per_cent: 20.0
+
+scale_down_factor: 1.0
+rotation_angle: 0.0
+
+polarity: 'b'   # 'n' or 'p' or 'b' or 's'
+
+compute_pitch_roll: true
+pitch_roll_estimation_alpha: 0.00001
+pitch_gt: 1
+pitch_scaler: 1.0

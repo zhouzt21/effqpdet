@@ -12,7 +12,9 @@
 #include <metavision/sdk/base/utils/timestamp.h>
 #include <yaml-cpp/yaml.h>
 
+#if defined(ENABLE_HDF5)
 #include "H5Cpp.h"
+#endif
 #include <cmath>
 
 // Helper function to retrieve a key and report errors if missing or wrong type.
@@ -153,6 +155,7 @@ inline void writeVectorToCSV(const std::vector<long long>& vec, const std::strin
     std::cout << "Vector written to " << filename << " successfully." << std::endl;
 }
 
+#if defined(ENABLE_HDF5)
 inline void writeConfigToH5(H5::Group &group, const Config &config) {
     // Write boolean values
     group.createAttribute("is_analysis", H5::PredType::NATIVE_HBOOL, H5::DataSpace()).write(H5::PredType::NATIVE_HBOOL, &config.is_analysis);
@@ -207,6 +210,7 @@ inline void create_group_if_does_not_exist(H5::Group& h5_group, std::string& gro
         h5_group.createGroup(group_name);
     }
 }
+#endif
 
 // Rotates pixel (x, y) around the center of an image of size (width x height)
 // by 'angle_deg' degrees (counterclockwise).

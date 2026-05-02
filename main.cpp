@@ -43,6 +43,9 @@
 
 #include <yaml-cpp/yaml.h>
 
+#if defined(ENABLE_HDF5)
+#include "H5Cpp.h"
+#endif
 
 #include "TensorBoardLogger.h"
 
@@ -319,6 +322,7 @@ void initialize_detector_visual_mode(Config &config,
 }
 
 
+#if defined(ENABLE_HDF5)
 bool pathExists(hid_t id, const std::string& path)
 
 {
@@ -326,6 +330,7 @@ bool pathExists(hid_t id, const std::string& path)
     return H5Lexists( id, path.c_str(), H5P_DEFAULT ) > 0;
 
 }
+#endif
 
 
 
@@ -728,9 +733,8 @@ int main(int argc, char *argv[]) {
     }
 
 
-    boost::timer::auto_cpu_timer timer;
-
-    auto start_time = timer.elapsed().wall;
+    auto start_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
 
 
     detector->start(1);
@@ -806,7 +810,8 @@ int main(int argc, char *argv[]) {
     }
 
 
-    auto end_time = timer.elapsed().wall;
+    auto end_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
 
 
     if (config.is_runtime_analysis)

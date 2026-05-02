@@ -36,6 +36,7 @@ Makefile
 *.swo
 
 # Generated outputs / data
+output/
 results/
 results_1/
 yaml/

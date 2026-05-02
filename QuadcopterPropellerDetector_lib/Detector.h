@@ -13,7 +13,9 @@
 #include <types.h>
 #include <utils.h>
 
+#if defined(ENABLE_HDF5)
 #include "H5Cpp.h"
+#endif
 #include <filesystem>
 #include <boost/timer/timer.hpp>
 
@@ -51,9 +53,11 @@ private:
     void initializeAnalysis();
     void updateBlockStats(BlockStats &stats, double timestamp);
 
+#if defined(ENABLE_HDF5)
     const size_t MAX_CHUNK_SIZE = 50000;
     H5::H5File h5_file;
     std::vector<std::unique_ptr<H5::Group>> channel_groups;
+#endif
 
     char m_polarity_allowed;
     int num_polarities_recorded;

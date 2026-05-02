@@ -7,8 +7,11 @@
 
 #include <vector>
 
+#if defined(ENABLE_HDF5)
 #include "H5Cpp.h"
+#endif
 
+#if defined(ENABLE_HDF5)
 void write_results_to_hdf5(H5::Group& channel_group, std::string& dataset_name, const std::vector<long long>& data)
 {
     if (channel_group.exists(dataset_name))
@@ -34,5 +37,6 @@ void write_results_to_hdf5(H5::Group& channel_group, std::string& dataset_name, 
     auto dataset_psnr = channel_group.createDataSet(dataset_name, H5::PredType::NATIVE_DOUBLE, dataspace);
     dataset_psnr.write(data.data(), H5::PredType::NATIVE_DOUBLE);
 }
+#endif
 
 #endif //UTILS_H
