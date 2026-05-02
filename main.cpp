@@ -21,7 +21,7 @@
 
 #include <boost/program_options.hpp>
 
-#include <boost/timer/timer.hpp>
+#include <mutex>
 
 #include <opencv2/opencv.hpp>
 
@@ -89,7 +89,17 @@ void initialize_detector_visual_mode(Config &config,
 
                                      Metavision::Window * window,
 
-                                     Metavision::PeriodicFrameGenerationAlgorithm &frame_gen, std::shared_ptr<Detector> &detector)
+                                     Metavision::PeriodicFrameGenerationAlgorithm &frame_gen, std::shared_ptr<Detector> &detector,
+
+                                     cv::VideoWriter &video_writer,
+
+                                     std::mutex &video_mutex,
+
+                                     const std::string &video_output_path,
+
+                                     double video_fps,
+
+                                     bool save_video)
 
 {
 
@@ -113,25 +123,12 @@ void initialize_detector_visual_mode(Config &config,
 
                 bool detection_any = false;
 
+                int bbox_count = 0;
                 for (int row = 0; row < detector->m_stats->at(p)[k - k_min].size(); ++row) {
 
                     for (int column = 0; column < detector->m_stats->at(p)[k - k_min][row].size(); ++column) {
 
                         auto stats = detector->m_stats->at(p)[k - k_min][row][column];
-
-                        if (row == 0 && column == 0 && k == k_min)
-
-                        {
-
-                            std::stringstream stream;
-
-                            stream << std::fixed << std::setprecision(0) << "p: " << (detector->m_global_stats->at(p)[k - k_min].pitch * 180.0 / 3.141592) << " r: " << (detector->m_global_stats->at(p)[k - k_min].roll * 180.0 / 3.141592);
-
-                            double font_height = cv::getTextSize("p: P", cv::FONT_HERSHEY_SIMPLEX, font_scale * 3, 1, nullptr).height;
-
-                            cv::putText(frame, stream.str(), cv::Point((1 << k) * column, (1 << k) * row + font_height * (k - k_min + 1)), cv::FONT_HERSHEY_SIMPLEX, font_scale * 3, cv::Scalar(0, 0, 255));
-
-                        }
 
                         if (stats.burst_std_estimated_ratio == 0.0) {
 
@@ -169,6 +166,8 @@ void initialize_detector_visual_mode(Config &config,
                                 }
 
                                 // -----------------------
+
+                                ++bbox_count;
 
                                 cv::rectangle(frame, cv::Rect(x, y, 1 << k, 1 << k),
 
@@ -294,8 +293,30 @@ void initialize_detector_visual_mode(Config &config,
 
                 }
 
+                if (k == k_min) {
+                    std::stringstream stream;
+                    stream << "Bbox count: " << bbox_count;
+                    double font_height = cv::getTextSize("Bbox count: 0", cv::FONT_HERSHEY_SIMPLEX, font_scale * 3, 1, nullptr).height;
+                    cv::putText(frame, stream.str(), cv::Point(5, static_cast<int>(font_height * 1.2)), cv::FONT_HERSHEY_SIMPLEX, font_scale * 3, cv::Scalar(0, 255, 0));
+                }
+
             }
 
+        }
+
+        if (save_video) {
+            std::lock_guard<std::mutex> lock(video_mutex);
+            if (!video_writer.isOpened()) {
+                int fourcc = cv::VideoWriter::fourcc('m', 'p', '4', 'v');
+                double fps = video_fps > 0.0 ? video_fps : 25.0;
+                video_writer.open(video_output_path, fourcc, fps, frame.size(), true);
+                if (!video_writer.isOpened()) {
+                    std::cerr << "Failed to open video writer: " << video_output_path << std::endl;
+                }
+            }
+            if (video_writer.isOpened()) {
+                video_writer.write(frame);
+            }
         }
 
         window->show(frame);
@@ -479,6 +500,19 @@ int main(int argc, char *argv[]) {
     std::filesystem::path run_dir = base_output_dir / (run_prefix + "_" + base_name);
     std::filesystem::create_directories(run_dir);
     std::cout << "Run output directory: " << run_dir.string() << std::endl;
+
+    bool save_video = (config.mode == CONFIG_MODE_VISUAL);
+    if (yaml_config["save_video"]) {
+        save_video = yaml_config["save_video"].as<bool>();
+    }
+
+    std::string video_output_path;
+    if (yaml_config["video_output"]) {
+        std::filesystem::path p(yaml_config["video_output"].as<std::string>());
+        video_output_path = (run_dir / p.filename()).string();
+    } else {
+        video_output_path = (run_dir / (base_name + ".mp4")).string();
+    }
 
     if (!config.analysis_filepath.empty())
     {
@@ -699,6 +733,8 @@ int main(int argc, char *argv[]) {
 
 
     Metavision::Window * window = nullptr;
+    cv::VideoWriter video_writer;
+    std::mutex video_mutex;
 
     if (config.mode == CONFIG_MODE_VISUAL)
 
@@ -728,7 +764,9 @@ int main(int argc, char *argv[]) {
 
             config, window,
 
-            frame_gen, detector);
+            frame_gen, detector,
+
+            video_writer, video_mutex, video_output_path, config.fps, save_video);
 
     }
 
@@ -825,6 +863,10 @@ int main(int argc, char *argv[]) {
     detector->join();
 
     detector->stop();
+
+    if (video_writer.isOpened()) {
+        video_writer.release();
+    }
 
 
     delete window;
